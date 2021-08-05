@@ -1,4 +1,4 @@
-import React, {ChangeEvent, useEffect, useState} from 'react';
+import React, {ChangeEvent, useEffect, useState, KeyboardEvent, useRef} from 'react';
 import './App.css';
 import {v1} from "uuid";
 
@@ -10,29 +10,40 @@ type UserType = {
 }
 
 function App() {
-
     const [text, setText] = useState<string>("");
     const [users, setUsers] = useState<UserType[]>([]);
-    const [ws, setWS] = useState<WebSocket | null>(null)
+    const [ws, setWS] = useState<WebSocket | null>(null);
+
+    if(ws) {
+        ws.onmessage = (messageEvent) => {
+        let messages = JSON.parse(messageEvent.data);
+        setUsers([...users, ...messages])
+            window.scrollTo(0,document.body.scrollHeight)
+    }}
 
     useEffect( () => {
-        console.log("USE EFFECT");
+        console.log("USE EFFECT renders");
         let localWS = new WebSocket("wss://social-network.samuraijs.com/handlers/ChatHandler.ashx");
-        localWS.onmessage = (messageEvent) => {
-            console.log(messageEvent);
-            let messages = JSON.parse(messageEvent.data);
-            console.log(messages);
-            setUsers(messages);
-        }
         setWS(localWS);
     }, [])
     const onChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setText(e.currentTarget.value)
     };
     const sendMessage = () => {
-        ws?.send(text)
+        ws?.send(text);
         setText("");
     }
+
+    const onKeyPressHandler = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if(e.key === "Enter" && text.trim().length) {
+            sendMessage();
+            setText("")
+            textareaRef.current?.blur()
+            // textareaRef?.current?.blur()
+        }
+    }
+
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     return (
         <div className="App">
@@ -49,7 +60,7 @@ function App() {
                     )}
                 </div>
                 <div className={"footer"} style={{marginTop: "30px"}}>
-                    <textarea value={text} onChange={onChange}></textarea>
+                    <textarea ref={textareaRef} value={text} onChange={onChange} onKeyUp={onKeyPressHandler}>{text}</textarea>
                     <button style={{position: "absolute", marginLeft: "20px"}} onClick={() => sendMessage()}>Send</button>
                 </div>
             </div>
