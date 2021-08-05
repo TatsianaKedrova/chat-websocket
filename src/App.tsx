@@ -18,7 +18,8 @@ function App() {
         ws.onmessage = (messageEvent) => {
         let messages = JSON.parse(messageEvent.data);
         setUsers([...users, ...messages])
-            window.scrollTo(0,document.body.scrollHeight)
+            messagesBlockRef.current?.scrollTo(0,messagesBlockRef.current.scrollHeight);
+            // window.scrollTo(0,document.body.scrollHeight);
     }}
 
     useEffect( () => {
@@ -44,11 +45,12 @@ function App() {
     }
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const messagesBlockRef = useRef<HTMLDivElement | null>(null);
 
     return (
         <div className="App">
             <div className={"chat"} style={{display: "flex", flexDirection: "column", justifyContent: "space-around", alignItems: "center"}}>
-                <div className={"messages"}>
+                <div className={"messages"} ref={messagesBlockRef}>
                     {users.map(user => {
                         return <div key={v1()} className={"message"} style={{marginBottom: "30px"}}>
                               <img src={user.userId === 17167 ? "https://i.pinimg.com/736x/45/bf/58/45bf5819509ef80a9bf013f0512670db.jpg" : user.photo} alt={"avatar photo"}
@@ -60,7 +62,7 @@ function App() {
                     )}
                 </div>
                 <div className={"footer"} style={{marginTop: "30px"}}>
-                    <textarea ref={textareaRef} value={text} onChange={onChange} onKeyUp={onKeyPressHandler}>{text}</textarea>
+                    <textarea ref={textareaRef} value={text} onChange={onChange} onKeyUp={onKeyPressHandler} />
                     <button style={{position: "absolute", marginLeft: "20px"}} onClick={() => sendMessage()}>Send</button>
                 </div>
             </div>
